@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tracker Dashboard</title>
+  <style>
+    body { font-family: Arial; background: #222; color: white; text-align: center; margin-top: 30px; }
+    
+    /* Buttons */
+    .btn-group { margin-bottom: 20px; }
+    .esp-button { background: #007BFF; color: white; border: none; padding: 12px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; margin: 5px; }
+    .esp-button.all { background: #ff9800; font-weight: bold; }
+    
+    /* Individual Data Panel */
+    .data-panel { display: none; background: #333; padding: 20px; width: 300px; margin: 20px auto; border-radius: 10px; }
+    
+    /* Distance Radar Panel */
+    .radar-panel { display: none; margin: 40px auto; width: 85%; max-width: 800px; padding: 40px 20px; background: #333; border-radius: 15px; }
+    .track-line { position: relative; height: 6px; background: #555; border-radius: 3px; margin: 40px 0; }
+    
+    /* The Dots */
+    .dot { position: absolute; top: -17px; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; font-weight: bold; font-size: 12px; color: white; 
+           transition: left 0.5s ease-out; transform: translateX(-50%); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    
+    .dot.me { left: 0%; background: #4CAF50; z-index: 10; }
+    .dot.esp1 { left: 10%; background: #007BFF; }
+    .dot.esp2 { left: 10%; background: #E91E63; }
+    
+    .dot-label { position: absolute; top: 45px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #ccc; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <h2>Network Tracker</h2>
+  
+<div class="btn-group">
+    <!-- Updated to match the IPs in your JavaScript array -->
+    <button class="esp-button" onclick="startTrackingSingle('10.42.0.208', 'ESP32 Dev')">View ESP32 Dev</button>
+    <button class="esp-button" onclick="startTrackingSingle('10.42.0.44', 'Mini ESP32')">View Mini ESP32</button>
+    <button class="esp-button all" onclick="startDistanceRadar()">Show All (Distance)</button>
+  </div>
+  
+  <!-- View 1: Individual Stats -->
+  <div id="single-panel" class="data-panel">
+    <h3 id="trackerName">Name</h3>
+    <p>Wi-Fi Signal: <strong id="wifi" style="color: #00ffcc;">-</strong> dBm</p>
+    <p>Touch Pin: <strong id="touch" style="color: #ffeb3b;">-</strong></p>
+  </div>
+
+  <!-- View 2: Visual Distance Radar -->
+  <div id="radar-panel" class="radar-panel">
+    <h3>Live Signal Distance</h3>
+    <div class="track-line">
+      <!-- You (The PC acting as the router) -->
+      <div class="dot me">ME<div class="dot-label">My PC</div></div>
+      
+      <!-- Tracker 1 -->
+      <div id="esp1" class="dot esp1" style="display:none;">1<div id="esp1-label" class="dot-label">ESP32 Dev</div></div>
+      
+      <!-- Tracker 2 -->
+      <div id="esp2" class="dot esp2" style="display:none;">2<div id="esp2-label" class="dot-label">Mini ESP32</div></div>
+    </div>
+  </div>
+
+<script>
+  // We added colors to the device list
+  const devices = [
+    { id: 'esp1', ip: '10.42.0.208', name: 'ESP32 Dev', color: '#007BFF' },
+    { id: 'esp2', ip: '10.42.0.44', name: 'Mini ESP32', color: '#E91E63' }
+  ];
+
+  let currentTimer = null;
+
+  function startTrackingSingle(ip, name) {
+    document.getElementById('radar-panel').style.display = 'none';
+    document.getElementById('single-panel').style.display = 'block';
+    document.getElementById('trackerName').innerText = name;
+    
+    if(currentTimer) clearInterval(currentTimer);
+
+    currentTimer = setInterval(() => {
+      fetch('http://' + ip + '/api/data')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('wifi').innerText = data.rssi;
+          
+          // FIX: Bring back the red text for the single view
+          if(data.touch < 20) {
+            document.getElementById('touch').innerHTML = "<span style='color: #ff4444; font-weight: bold;'>TOUCHED! (" + data.touch + ")</span>";
+          } else {
+            document.getElementById('touch').innerText = data.touch + " (Not Touched)";
+          }
+        }).catch(err => console.log("Offline"));
+    }, 5000);
+  }
+
+  function startDistanceRadar() {
+    document.getElementById('single-panel').style.display = 'none';
+    document.getElementById('radar-panel').style.display = 'block';
+    
+    document.getElementById('esp1').style.display = 'block';
+    document.getElementById('esp2').style.display = 'block';
+
+    if(currentTimer) clearInterval(currentTimer);
+
+    currentTimer = setInterval(() => {
+      devices.forEach(device => {
+        fetch('http://' + device.ip + '/api/data')
+          .then(res => res.json())
+          .then(data => {
+            let rssi = data.rssi;
+            let percent = ((Math.abs(rssi) - 30) / 60) * 100;
+            percent = Math.max(10, Math.min(percent, 100)); 
+            
+            let dot = document.getElementById(device.id);
+            dot.style.left = percent + '%';
+            dot.style.opacity = '1';
+            
+            // FIX: Make the dot glow red on the radar when touched!
+            if (data.touch < 20) {
+              dot.style.backgroundColor = '#ff4444';
+              dot.style.boxShadow = '0 0 20px #ff4444';
+              document.getElementById(device.id + '-label').innerHTML = "<span style='color:#ff4444; font-weight:bold;'>TOUCHED!</span>";
+            } else {
+              dot.style.backgroundColor = device.color;
+              dot.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+              document.getElementById(device.id + '-label').innerText = device.name + ' (' + rssi + 'dBm)';
+              document.getElementById(device.id + '-label').style.color = '#ccc';
+            }
+          })
+          .catch(err => {
+            document.getElementById(device.id + '-label').innerText = device.name + ' (Offline)';
+            document.getElementById(device.id).style.opacity = '0.3';
+          });
+      });
+    }, 5000);
+  }
+</script>
+</body>
+</html>
