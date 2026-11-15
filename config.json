@@ -1,0 +1,47 @@
+{
+  "objetivo": [
+    "Xiaomi 15T Pro",
+    "S24 de Cristobal",
+    "Redmi Note 13 Pro 5G"
+  ],
+  "puerto_udp": 4210,
+  "sala": [
+    6.0,
+    6.5
+  ],
+  "celda_m": 0.5,
+  "ventana_s": 2.0,
+  "min_muestras": 1,
+  "intervalo_ms": 200,
+  "decay": 0.97,
+  "suavizado": 0.8,
+  "anclas": {
+    "A": {
+      "pos": [
+        0.0,
+        6.5
+      ],
+      "A": -59.0,
+      "n": 2.5,
+      "peso": 1.0
+    },
+    "B": {
+      "pos": [
+        4.5,
+        0.0
+      ],
+      "A": -59.0,
+      "n": 2.5,
+      "peso": 1.0
+    },
+    "LAPTOP": {
+      "pos": [
+        6.0,
+        5.5
+      ],
+      "A": -48.0,
+      "n": 2.5,
+      "peso": 0.5
+    }
+  }
+}
