@@ -1,3 +1,13 @@
+/*
+ * FLUXA - firmware de ancla (receptor BLE -> UDP) para ESP32-S3, proyecto PlatformIO.
+ *
+ *  - Detecta pulseras FLUXA por Manufacturer Data (Company ID 0xFFFF + "FX01", "FX02"...)
+ *    y, de respaldo, por los nombres de OBJETIVOS.
+ *  - Envia cada lectura al panel por UDP broadcast: {"a":"A","o":"FX01","rssi":-61}
+ *  - Envia un latido cada 5 s: {"a":"A","hb":1,...}
+ *
+ *  Subir:  pio run -e anclaA -t upload   /   pio run -e anclaB -t upload
+ */
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -13,7 +23,11 @@ const char* WIFI_PASS = "tkwn1519";              // clave del hotspot
 const char* IP_LAPTOP = "255.255.255.255";       // broadcast: no depende de la IP del notebook
 const uint16_t PUERTO    = 4210;
 
-const char* ID_ANCLA = "A";  // <<<<<< PLACA 1 = "A".  Para la SEGUNDA placa, cambiar a "B".
+// El ID de la ancla lo define platformio.ini (entornos anclaA y anclaB).
+#ifndef ID_ANCLA_DEF
+#define ID_ANCLA_DEF "A"
+#endif
+const char* ID_ANCLA = ID_ANCLA_DEF;
 
 // ------------------- IDENTIFICACION DE PULSERAS -------------------
 // Forma principal (no depende del nombre): Manufacturer Data con Company ID 0xFFFF
