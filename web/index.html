@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>FLUXA · Plataforma de Inteligencia Operacional</title>
+<style>
+  :root{
+    --bg:#0e131d; --panel:#151b28; --panel2:#1a2233; --borde:#252f44; --texto:#e6ebf5; --suave:#8f9bb3;
+    --acento:#4fd1c5; --azul:#4c8dff; --rojo:#e5484d; --naranjo:#f0883e; --amarillo:#f5c542; --verde:#30c47a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--texto);font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;font-size:14px}
+  button,select{font:inherit;color:inherit}
+  .app{display:grid;grid-template-rows:56px 1fr;height:100vh}
+  header{display:flex;align-items:center;gap:18px;padding:0 18px;border-bottom:1px solid var(--borde);background:#111725}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:1px}
+  .sep{width:1px;height:28px;background:var(--borde)}
+  .titulo{color:#c9d2e3;font-size:15px}
+  .der{margin-left:auto;display:flex;align-items:center;gap:16px}
+  .vivo{display:flex;align-items:center;gap:8px;background:#2a1d24;border:1px solid #47262e;padding:6px 12px;border-radius:8px;font-weight:600;font-size:13px}
+  .vivo .p{width:9px;height:9px;border-radius:50%;background:var(--rojo);animation:lat 1.4s infinite}
+  .vivo.sim{background:#2b2717;border-color:#4b4220}.vivo.sim .p{background:var(--amarillo)}
+  @keyframes lat{50%{opacity:.25}}
+  .reloj{font-size:14px;color:#c9d2e3;min-width:190px;text-align:right}
+  .cuerpo{display:grid;grid-template-columns:240px 1fr 300px;gap:14px;padding:14px;min-height:0}
+  nav{display:flex;flex-direction:column;gap:6px;min-height:0}
+  nav button{display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:8px;padding:11px 12px;text-align:left;color:#c9d2e3;cursor:pointer}
+  nav button:hover{background:#1a2131}
+  nav button.on{background:#222b3d;color:#fff}
+  nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8}
+  .badge{margin-left:auto;background:var(--rojo);color:#fff;border-radius:6px;font-size:11px;font-weight:700;padding:1px 6px}
+  .caja-alerta{margin:4px 2px 8px;border:1px solid #6b2a31;background:#2a161b;color:#ffb3b8;border-radius:8px;padding:9px 10px;font-size:12.5px;display:none;cursor:pointer}
+  .caja-alerta b{color:#fff}
+  .caja-alerta.medio{border-color:#6b4a24;background:#2a2016;color:#ffd2a8}
+  .conex{margin-top:auto;font-size:11.5px;color:var(--suave);line-height:1.7;padding:8px 10px;border-top:1px solid var(--borde)}
+  .ok{color:var(--verde)} .mal{color:var(--rojo)} .med{color:var(--amarillo)}
+  main{min-height:0;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--borde);border-radius:12px}
+  .mapa{flex:1;display:flex;flex-direction:column;min-height:360px;overflow:hidden}
+  .barra{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--borde)}
+  .ctrl{background:var(--panel2);border:1px solid var(--borde);border-radius:8px;padding:7px 10px;cursor:pointer}
+  select.ctrl{padding-right:28px}
+  .chip{font-size:12px;color:var(--suave);background:#121826;border:1px solid var(--borde);border-radius:20px;padding:4px 10px}
+  .capas{position:relative}
+  .menu{position:absolute;right:0;top:40px;z-index:5;background:var(--panel2);border:1px solid var(--borde);border-radius:10px;padding:8px 12px;display:none;min-width:230px;box-shadow:0 10px 30px #0008}
+  .menu label{display:flex;gap:8px;align-items:center;padding:6px 0;cursor:pointer;font-size:13px}
+  .lienzo{position:relative;flex:1;min-height:0;background:#121927}
+  canvas#mapa{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+  .leyenda{margin-left:auto;font-size:12px}
+  .leyenda .bar{height:8px;width:170px;border-radius:4px;margin:0 0 3px;background:linear-gradient(90deg,rgba(48,196,122,.25),#30c47a,#f5c542,#f0883e,#e5484d)}
+  .leyenda .esc{display:flex;justify-content:space-between;color:var(--suave);font-size:11px}
+  .zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
+  .zoom button{width:34px;height:34px;border-radius:8px;background:#1a2233e6;border:1px solid var(--borde);cursor:pointer;font-size:18px}
+  .nota{position:absolute;left:12px;top:10px;font-size:11px;color:var(--suave);background:#121826cc;padding:3px 8px;border-radius:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{color:var(--suave);font-weight:500;text-align:left;padding:8px 12px;border-bottom:1px solid var(--borde);white-space:nowrap;position:sticky;top:0;background:var(--panel)}
+  td{padding:8px 12px;border-bottom:1px solid #1e2738;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .niv{display:inline-block;min-width:62px;text-align:center;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700}
+  .niv.BAJO{background:#173327;color:#7fe0ad}.niv.MEDIO{background:#3a2a14;color:#ffbf7a}.niv.ALTO{background:#3d171b;color:#ff8f95}
+  .tabla{overflow:auto}
+  .tit{display:flex;align-items:center;gap:8px;padding:12px 14px;font-size:12.5px;letter-spacing:.6px;color:#c9d2e3;text-transform:uppercase;border-bottom:1px solid var(--borde)}
+  .tit .acc{margin-left:auto;text-transform:none;letter-spacing:0}
+  aside{display:flex;flex-direction:column;gap:14px;min-height:0;overflow:auto}
+  .kpi{padding:14px 16px}
+  .kpi .et{font-size:12.5px;letter-spacing:.6px;color:#c9d2e3;text-transform:uppercase;display:flex;justify-content:space-between}
+  .kpi .v{font-size:34px;font-weight:700;margin-top:6px}
+  .kpi .v small{font-size:17px;font-weight:500;color:#c9d2e3;margin-left:6px}
+  .kpi .sub{font-size:12px;color:var(--suave);margin-top:4px;line-height:1.45}
+  .kpi svg.spark{width:100%;height:56px;margin-top:6px}
+  .red{color:var(--verde)}
+  .punto{width:12px;height:12px;border-radius:50%;background:var(--verde);display:inline-block}
+  .zc{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .zc div{border-radius:6px;padding:8px 10px;font-size:13px;font-weight:600}
+  .zc .ALTO{background:#c93b41;color:#fff}.zc .MEDIO{background:#e0852f;color:#fff}.zc .ok{background:#173327;color:#7fe0ad;font-weight:500}
+  .vista{display:none;flex-direction:column;gap:14px;min-height:0;flex:1;overflow:auto}
+  .vista.on{display:flex}
+  .graf{height:240px;position:relative}
+  .graf canvas{position:absolute;inset:0;width:100%;height:100%}
+  .fila{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px}
+  .btn{background:#1d3a3a;border:1px solid #2b5a57;color:#bff3ec;border-radius:8px;padding:8px 12px;cursor:pointer;text-decoration:none;font-size:13px}
+  .btn:hover{background:#24504e}
+  .ayuda{padding:12px 16px;font-size:13px;line-height:1.6;color:#c9d2e3}
+  .ayuda code{background:#0f1520;border:1px solid var(--borde);border-radius:4px;padding:1px 5px;color:var(--acento)}
+  .vacio{padding:16px;color:var(--suave);font-size:13px}
+  .leg{display:flex;flex-wrap:wrap;gap:12px;padding:0 14px 10px;font-size:12px;color:var(--suave)}
+  .leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  @media (max-width:1100px){.cuerpo{grid-template-columns:64px 1fr 260px}nav button span,.caja-alerta,.conex{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#4fd1c5" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="7" cy="16" r="3.2" fill="#4fd1c5"/><circle cx="24" cy="7" r="3" /><circle cx="25" cy="25" r="3"/><circle cx="16" cy="16" r="2.2" fill="#4fd1c5"/>
+        <path d="M10 16h4M18 15l4-6M18 17l5 6"/>
+      </svg>FLUXA
+    </div>
+    <div class="sep"></div>
+    <div class="titulo">Plataforma de Inteligencia Operacional</div>
+    <div class="der">
+      <select class="ctrl" id="selMapa" title="Mapa">
+        <option value="sala">Sala de prueba (datos reales)</option>
+        <option value="parque">Parque (simulación)</option>
+      </select>
+      <div class="vivo" id="vivo"><span class="p"></span><span id="vivoTxt">EN VIVO - TIEMPO REAL</span></div>
+      <div class="sep"></div>
+      <div class="reloj" id="reloj"></div>
+    </div>
+  </header>
+
+  <div class="cuerpo">
+    <nav>
+      <button data-v="monitoreo" class="on"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Monitoreo de Flujo</span></button>
+      <button data-v="alertas"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg><span>Alertas de Congestión</span><b class="badge" id="badge" style="display:none">0</b></button>
+      <div class="caja-alerta" id="cajaAlerta"></div>
+      <button data-v="receptores"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span>Gestión de Receptores</span></button>
+      <button data-v="historicos"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span>Históricos</span></button>
+      <div class="conex" id="conex"></div>
+    </nav>
+
+    <main>
+      <!-- MONITOREO -->
+      <section class="vista on" id="v-monitoreo">
+        <div class="card mapa">
+          <div class="barra">
+            <span style="font-weight:600" id="nomMapa">—</span>
+            <span class="chip" id="chipInfo">—</span>
+            <div class="leyenda">
+              <div class="bar"></div>
+              <div class="esc"><span>0</span><span id="legMid">2</span><span id="legMax">4+ p/m²</span></div>
+            </div>
+            <div class="capas">
+              <button class="ctrl" id="btnCapas">◈ Capas de mapa</button>
+              <div class="menu" id="menuCapas">
+                <label><input type="checkbox" data-c="densidad" checked> Mapa de calor (densidad actual)</label>
+                <label><input type="checkbox" data-c="acumulado"> Permanencia acumulada</label>
+                <label><input type="checkbox" data-c="zonas" checked> Zonas y niveles</label>
+                <label><input type="checkbox" data-c="pulseras" checked> Pulseras (muestra)</label>
+                <label><input type="checkbox" data-c="receptores" checked> Receptores</label>
+              </div>
+            </div>
+          </div>
+          <div class="lienzo" id="lienzo">
+            <canvas id="mapa"></canvas>
+            <div class="zoom"><button id="zMas">+</button><button id="zMenos">−</button><button id="zReset" title="Centrar">⤢</button></div>
+            <div class="nota" id="nota">Mapa de calor y flujo (información agregada)</div>
+          </div>
+        </div>
+        <div class="card tabla" style="max-height:34vh">
+          <div class="tit">Densidad, permanencia y flujo por zona <span class="acc chip" id="chipFase"></span></div>
+          <table><thead><tr><th>Zona</th><th class="num">Densidad</th><th class="num">Personas est.</th><th>Nivel</th><th class="num">Permanencia prom.</th><th class="num">Entradas (10 min)</th></tr></thead><tbody id="tZonas"></tbody></table>
+        </div>
+      </section>
+
+      <!-- ALERTAS -->
+      <section class="vista" id="v-alertas">
+        <div class="card tabla">
+          <div class="tit">Alertas de congestión <span class="acc"><button class="btn" id="btnVistas">Marcar todas como vistas</button> <a class="btn" data-exp="alertas">Exportar CSV</a></span></div>
+          <table><thead><tr><th>Hora</th><th>Zona</th><th>Nivel</th><th class="num">Densidad</th><th class="num">Personas est.</th><th>Estado</th></tr></thead><tbody id="tAlertas"></tbody></table>
+        </div>
+        <div class="card ayuda">
+          Una alerta se genera cuando la densidad estimada de una zona supera su umbral (MEDIO o ALTO) durante al menos 0,5 s.
+          Para volver a un nivel inferior la densidad debe mantenerse bajo el umbral 2 s, así se evitan alertas intermitentes.
+          Los umbrales de cada zona se ajustan en <code>config.json</code>.
+        </div>
+      </section>
+
+      <!-- RECEPTORES -->
+      <section class="vista" id="v-receptores">
+        <div class="card tabla">
+          <div class="tit">Receptores <span class="acc chip" id="chipRed"></span></div>
+          <table><thead><tr><th>ID</th><th>Posición (m)</th><th>Estado</th><th class="num">Último dato</th><th class="num">Paquetes/s</th><th class="num">WiFi</th><th class="num">A</th><th class="num">n</th><th class="num">Peso</th><th>IP</th></tr></thead><tbody id="tRec"></tbody></table>
+        </div>
+        <div class="card tabla" id="cardSinPos">
+          <div class="tit">Pulseras detectadas sin posición (las ven menos de 3 receptores)</div>
+          <table><tbody id="tSinPos"></tbody></table>
+        </div>
+        <div class="card tabla" id="cardRadar">
+          <div class="tit">Radar BLE del laptop (todo lo que ve alrededor)</div>
+          <table><thead><tr><th>Pulsera</th><th>Nombre</th><th>Dirección</th><th class="num">RSSI</th><th>Manufacturer data</th></tr></thead><tbody id="tRadar"></tbody></table>
+        </div>
+        <div class="card ayuda">
+          <b>Cómo convertir un celular en pulsera FLUXA (sin depender del nombre)</b><br>
+          En nRF Connect: <i>Advertiser → nuevo anuncio → Add record → Manufacturer Data</i>.
+          Company ID <code>0xFFFF</code> y datos <code>46583031</code> (= "FX01"). Para la segunda pulsera usa <code>46583032</code> ("FX02"), y así.
+          Quita el registro "Complete Local Name" para que el anuncio no supere los 31 bytes.
+          Los ESP32 y el laptop reconocen esa firma aunque el teléfono cambie de nombre o de dirección.
+          Los nombres antiguos de <code>config.json</code> siguen funcionando como respaldo.
+        </div>
+      </section>
+
+      <!-- HISTORICOS -->
+      <section class="vista" id="v-historicos">
+        <div class="card">
+          <div class="tit">Aforo estimado en el tiempo</div>
+          <div class="graf"><canvas id="gAforo"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="tit">Densidad por zona (personas/m²)</div>
+          <div class="leg" id="legZonas"></div>
+          <div class="graf"><canvas id="gZonas"></canvas></div>
+        </div>
+        <div class="fila">
+          <div class="card tabla">
+            <div class="tit">Permanencia por zona (últimos 10 min)</div>
+            <table><thead><tr><th>Zona</th><th class="num">Permanencia prom.</th><th class="num">Entradas</th></tr></thead><tbody id="tPerm"></tbody></table>
+          </div>
+          <div class="card tabla">
+            <div class="tit">Flujos principales (última hora)</div>
+            <table><thead><tr><th>Desde</th><th>Hacia</th><th class="num">Personas est.</th></tr></thead><tbody id="tFlujos"></tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="tit">Exportar datos (CSV, abre en Excel)</div>
+          <div class="btns">
+            <a class="btn" data-exp="historico">Histórico de aforo y densidad</a>
+            <a class="btn" data-exp="alertas">Alertas</a>
+            <a class="btn" data-exp="permanencias">Permanencias</a>
+            <a class="btn" data-exp="flujos">Flujos entre zonas</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside>
+      <div class="card kpi">
+        <div class="et">Aforo estimado <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8f9bb3" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14c2.8 0 5 2.2 5 5"/></svg></div>
+        <div class="v"><span id="kAforo">0</span><small>personas</small></div>
+        <svg class="spark" id="spark" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="card kpi">
+        <div class="et">Muestra BLE activa <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8f9bb3" stroke-width="1.8" stroke-linecap="round"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></svg></div>
+        <div class="v"><span id="kMuestra">0</span><small>pulseras</small></div>
+        <div class="sub" id="kMuestraSub">Proyección estadística: aforo = muestra × factor de expansión.</div>
+      </div>
+      <div class="card kpi">
+        <div class="et">Estado de red <span class="punto" id="kRedPunto"></span></div>
+        <div class="v red" id="kRed">0/0<small class="red">Receptores Online</small></div>
+        <div class="sub" id="kRedSub"></div>
+      </div>
+      <div class="card kpi">
+        <div class="et">Zonas críticas</div>
+        <div class="zc" id="kZonas"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt = n => Number(n).toLocaleString("es-CL");
+const fmtDec = (n, d = 2) => Number(n).toLocaleString("es-CL", {minimumFractionDigits: d, maximumFractionDigits: d});
+const fmtDur = s => s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min ${String(Math.round(s % 60)).padStart(2, "0")} s`;
+const hora = t => new Date(t * 1000).toLocaleTimeString("es-CL", {hourCycle: "h23"});
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+let mapa = "sala", vista = "monitoreo", E = null, H = null;
+const capas = {densidad: true, acumulado: false, zonas: true, pulseras: true, receptores: true};
+const view = {zoom: 1, px: 0, py: 0};
+const COLORES_TAG = ["#ffffff", "#4fd1c5", "#ff7ad9", "#9cff57", "#ffd166", "#7aa2ff"];
+const COLORES_ZONA = ["#4fd1c5", "#4c8dff", "#f5c542", "#ff7ad9", "#9cff57", "#f0883e", "#b18cff", "#e5484d"];
+
+// ---------------------------------------------------------------- reloj
+function reloj() {
+  const d = new Date();
+  const mes = d.toLocaleDateString("es-CL", {month: "long"});
+  $("#reloj").textContent = `${d.getDate()} ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${d.getFullYear()}, ${d.toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
+}
+setInterval(reloj, 1000); reloj();
+
+// ---------------------------------------------------------------- navegación
+document.querySelectorAll("nav button[data-v]").forEach(b => b.onclick = () => irA(b.dataset.v));
+function irA(v) {
+  vista = v;
+  document.querySelectorAll("nav button[data-v]").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+  document.querySelectorAll(".vista").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
+  if (v === "historicos") cargarHistorico();
+  if (v === "monitoreo") requestAnimationFrame(dibujarMapa);
+}
+$("#cajaAlerta").onclick = () => irA("alertas");
+$("#selMapa").onchange = e => { mapa = e.target.value; E = null; view.zoom = 1; view.px = view.py = 0; tick(); if (vista === "historicos") cargarHistorico(); };
+$("#btnCapas").onclick = () => { const m = $("#menuCapas"); m.style.display = m.style.display === "block" ? "none" : "block"; };
+document.addEventListener("click", e => { if (!e.target.closest(".capas")) $("#menuCapas").style.display = "none"; });
+document.querySelectorAll("#menuCapas input").forEach(i => i.onchange = () => { capas[i.dataset.c] = i.checked; dibujarMapa(); });
+document.querySelectorAll("[data-exp]").forEach(a => a.onclick = () => { location.href = `/api/exportar?mapa=${mapa}&tipo=${a.dataset.exp}`; });
+$("#btnVistas").onclick = async () => { await fetch(`/api/alertas/vistas?mapa=${mapa}`, {method: "POST"}); tick(); };
+
+// ---------------------------------------------------------------- datos
+async function tick() {
+  try {
+    const r = await fetch(`/api/estado?mapa=${mapa}`, {cache: "no-store"});
+    const d = await r.json();
+    if (!d.mapa) return;
+    E = d;
+    pintarTodo();
+  } catch (e) {
+    $("#conex").innerHTML = `<span class="mal">● Sin conexión con el servidor</span>`;
+  }
+}
+setInterval(tick, 500); tick();
+
+async function cargarHistorico() {
+  try { H = await (await fetch(`/api/historico?mapa=${mapa}`)).json(); pintarHistorico(); } catch (e) {}
+}
+setInterval(() => { if (vista === "historicos") cargarHistorico(); }, 4000);
+
+// ---------------------------------------------------------------- panel
+function pintarTodo() {
+  const k = E.kpis;
+  $("#vivo").classList.toggle("sim", E.simulado);
+  $("#vivoTxt").textContent = E.simulado ? "SIMULACIÓN" : "EN VIVO - TIEMPO REAL";
+  $("#kAforo").textContent = fmt(k.aforo);
+  $("#kMuestra").textContent = fmt(k.muestra);
+  $("#kMuestraSub").textContent = `Proyección estadística: cada pulsera representa a ${fmt(k.factor)} personas (aforo = muestra × ${fmt(k.factor)}).`;
+  const todos = k.receptores_online === k.receptores_total && k.receptores_total > 0;
+  $("#kRed").innerHTML = `${k.receptores_online}/${k.receptores_total}<small class="${todos ? "red" : "mal"}">Receptores Online</small>`;
+  $("#kRed").className = "v " + (todos ? "red" : "mal");
+  $("#kRedPunto").style.background = todos ? "var(--verde)" : (k.receptores_online ? "var(--amarillo)" : "var(--rojo)");
+  $("#kRedSub").textContent = E.mapa === "sala" ? E.receptores.map(r => `${r.id} ${r.online ? "✓" : "✗"}`).join("   ") : "Red de receptores simulada";
+  spark();
+  zonasCriticas();
+  // alertas
+  const sinVer = E.alertas.filter(a => !a.vista);
+  $("#badge").style.display = sinVer.length ? "" : "none";
+  $("#badge").textContent = sinVer.length > 99 ? "99+" : sinVer.length;
+  const activa = E.zonas.filter(z => z.nivel !== "BAJO").sort((a, b) => b.densidad - a.densidad)[0];
+  const caja = $("#cajaAlerta");
+  if (activa) {
+    caja.style.display = "block";
+    caja.className = "caja-alerta" + (activa.nivel === "MEDIO" ? " medio" : "");
+    caja.innerHTML = `⚠ <b>Alerta:</b> ${activa.nivel === "ALTO" ? "Alta" : "Media"} densidad en ${esc(activa.nombre)}`;
+  } else caja.style.display = "none";
+  // conexión
+  if (E.mapa === "sala") {
+    const u = E.udp === "ok" ? `<span class="ok">● UDP ${E.udp}</span>` : `<span class="mal">● UDP ${esc(E.udp)}</span>`;
+    const b = E.ble === "ok" ? `<span class="ok">● BLE laptop ok</span>` : `<span class="med">● BLE laptop: ${esc(E.ble)}</span>`;
+    $("#conex").innerHTML = `${u}<br>${b}`;
+  } else $("#conex").innerHTML = `<span class="med">● Datos simulados</span>`;
+  // chips
+  $("#nomMapa").textContent = E.nombre;
+  $("#chipInfo").textContent = E.mapa === "sala"
+    ? `${E.dims[0]} × ${E.dims[1]} m · ${E.tags.length} pulsera(s) ubicada(s)`
+    : `${E.dims[0]} × ${E.dims[1]} m · fase: ${E.fase}`;
+  $("#chipFase").textContent = E.simulado ? "Datos simulados" : "Datos reales";
+  const vmax = Math.max(...E.zonas.map(z => z.umbral_alto), 1) * 1.15;
+  $("#legMid").textContent = fmtDec(vmax / 2, 1);
+  $("#legMax").textContent = `${fmtDec(vmax, 1)}+ p/m²`;
+  // tablas
+  $("#tZonas").innerHTML = E.zonas.map((z, i) => `<tr>
+    <td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${COLORES_ZONA[i % 8]};margin-right:8px"></i>${esc(z.nombre)}</td>
+    <td class="num">${fmtDec(z.densidad)} p/m²</td><td class="num">${fmt(z.personas)}</td>
+    <td><span class="niv ${z.nivel}">${z.nivel}</span></td>
+    <td class="num">${z.permanencia_s ? fmtDur(z.permanencia_s) : "—"}</td><td class="num">${fmt(z.entradas_10min)}</td></tr>`).join("");
+  if (vista === "alertas") pintarAlertas();
+  if (vista === "receptores") pintarReceptores();
+  if (vista === "monitoreo") dibujarMapa();
+}
+
+function spark() {
+  const s = E.serie_aforo, svg = $("#spark");
+  if (s.length < 2) { svg.innerHTML = ""; return; }
+  const ys = s.map(p => p[1]), mx = Math.max(...ys, 1), mn = Math.min(...ys, 0);
+  const pts = s.map((p, i) => [i / (s.length - 1) * 300, 52 - (p[1] - mn) / ((mx - mn) || 1) * 46]);
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  svg.innerHTML = `<defs><linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c8dff" stop-opacity=".35"/><stop offset="1" stop-color="#4c8dff" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L300 56 L0 56 Z" fill="url(#gs)"/><path d="${d}" fill="none" stroke="#4c8dff" stroke-width="2.2"/>`;
+}
+
+function zonasCriticas() {
+  const c = E.zonas.filter(z => z.nivel !== "BAJO").sort((a, b) => (b.nivel === "ALTO") - (a.nivel === "ALTO") || b.densidad - a.densidad);
+  $("#kZonas").innerHTML = c.length
+    ? c.map(z => `<div class="${z.nivel}">${esc(z.nombre)} - ${z.nivel} <span style="float:right;font-weight:500">${fmtDec(z.densidad, 1)} p/m²</span></div>`).join("")
+    : `<div class="ok">Sin zonas críticas</div>`;
+}
+
+function pintarAlertas() {
+  $("#tAlertas").innerHTML = E.alertas.length ? E.alertas.map(a => `<tr>
+    <td>${hora(a.t)}</td><td>${esc(a.zona)}</td><td><span class="niv ${a.nivel}">${a.nivel}</span></td>
+    <td class="num">${fmtDec(a.densidad)} p/m²</td><td class="num">${fmt(a.personas)}</td>
+    <td>${a.vista ? '<span style="color:var(--suave)">Vista</span>' : '<b style="color:#ff8f95">Nueva</b>'}</td></tr>`).join("")
+    : `<tr><td colspan="6" class="vacio">Sin alertas registradas.</td></tr>`;
+}
+
+function pintarReceptores() {
+  const r = E.receptores;
+  $("#chipRed").textContent = `${E.kpis.receptores_online}/${E.kpis.receptores_total} en línea`;
+  $("#tRec").innerHTML = r.map(x => `<tr>
+    <td><b>${esc(x.id)}</b></td><td>(${fmtDec(x.x, 1)}; ${fmtDec(x.y, 1)})</td>
+    <td>${x.online ? '<span class="ok">● En línea</span>' : '<span class="mal">● Sin señal</span>'}</td>
+    <td class="num">${x.hace_s == null ? "—" : fmtDec(x.hace_s, 1) + " s"}</td><td class="num">${x.paquetes_s ?? "—"}</td>
+    <td class="num">${x.wifi_dbm != null ? x.wifi_dbm + " dBm" : "—"}</td>
+    <td class="num">${x.A ?? "—"}</td><td class="num">${x.n ?? "—"}</td><td class="num">${x.peso ?? "—"}</td><td>${esc(x.ip ?? "—")}</td></tr>`).join("");
+  const sala = E.mapa === "sala";
+  $("#cardSinPos").style.display = sala ? "" : "none";
+  $("#cardRadar").style.display = sala ? "" : "none";
+  if (!sala) return;
+  $("#tSinPos").innerHTML = E.sin_posicion.length
+    ? E.sin_posicion.map(s => `<tr><td><b>${esc(s.alias)}</b> <span style="color:var(--suave)">(${esc(s.id)})</span></td><td>la ven: ${s.anclas.map(esc).join(", ") || "—"}</td></tr>`).join("")
+    : `<tr><td class="vacio">Todas las pulseras detectadas tienen posición.</td></tr>`;
+  $("#tRadar").innerHTML = E.radar.length
+    ? E.radar.map(d => `<tr><td>${d.tag ? `<span class="niv BAJO">${esc(d.tag)}</span>` : ""}</td><td>${esc(d.nombre) || '<span style="color:var(--suave)">(sin nombre)</span>'}</td>
+      <td style="color:var(--suave)">${esc(d.direccion)}</td><td class="num">${d.rssi} dBm</td><td style="color:var(--suave)">${esc(d.mfg)}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="vacio">${E.ble === "ok" ? "Escaneando…" : "El laptop no está escaneando BLE (" + esc(E.ble) + ")."}</td></tr>`;
+}
+
+// ---------------------------------------------------------------- mapa
+const cv = $("#mapa"), ctx = cv.getContext("2d");
+const heat = document.createElement("canvas"), hctx = heat.getContext("2d");
+let geo = null;
+
+function rampa(t) {  // 0..1 -> rgba
+  const st = [[0, [48, 196, 122, 0]], [0.08, [48, 196, 122, 0.25]], [0.3, [48, 196, 122, 0.6]], [0.55, [245, 197, 66, 0.72]], [0.75, [240, 136, 62, 0.8]], [1, [229, 72, 77, 0.88]]];
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 1; i < st.length; i++) if (t <= st[i][0]) {
+    const [t0, a] = st[i - 1], [t1, b] = st[i], f = (t - t0) / (t1 - t0);
+    return a.map((v, k) => v + (b[k] - v) * f);
+  }
+  return st[st.length - 1][1];
+}
+function rampaAzul(t) { t = Math.max(0, Math.min(1, t)); return [76 + 100 * t, 141 - 40 * t, 255, t < 0.03 ? 0 : 0.15 + 0.6 * t]; }
+
+function ajustar() {
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(1, r.width * dpr); cv.height = Math.max(1, r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return r;
+}
+new ResizeObserver(() => dibujarMapa()).observe($("#lienzo"));
+
+function dibujarMapa() {
+  if (!E || vista !== "monitoreo") return;
+  const r = ajustar(), [W, Hh] = E.dims, pad = 36;
+  const s = Math.min((r.width - 2 * pad) / W, (r.height - 2 * pad) / Hh) * view.zoom;
+  const ox = (r.width - W * s) / 2 + view.px, oy = (r.height - Hh * s) / 2 + view.py;
+  const X = x => ox + x * s, Y = y => oy + (Hh - y) * s;
+  geo = {X, Y, s};
+  ctx.clearRect(0, 0, r.width, r.height);
+
+  // suelo
+  ctx.fillStyle = E.mapa === "sala" ? "#1f2738" : "#1c2a26";
+  redondeado(X(0), Y(Hh), W * s, Hh * s, 10); ctx.fill();
+  if (E.mapa === "sala") cuadricula(W, Hh, X, Y, s); else decorParque(X, Y, s);
+
+  // zonas (relleno base)
+  if (capas.zonas) E.zonas.forEach((z, i) => {
+    ctx.beginPath(); z.poligono.forEach(([x, y], k) => k ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y))); ctx.closePath();
+    ctx.fillStyle = E.mapa === "parque" ? "rgba(120,135,160,0.16)" : "rgba(120,135,160,0.06)"; ctx.fill();
+  });
+
+  // calor
+  const [nx, ny] = E.grid;
+  if (capas.acumulado) capaCalor(E.acumulado, nx, ny, v => rampaAzul(v), X, Y, W, Hh, s);
+  if (capas.densidad) {
+    const vmax = Math.max(...E.zonas.map(z => z.umbral_alto), 1) * 1.15;
+    capaCalor(E.densidad, nx, ny, v => rampa(v / vmax), X, Y, W, Hh, s);
+  }
+
+  // contornos de zona y etiquetas
+  if (capas.zonas) E.zonas.forEach((z, i) => {
+    ctx.beginPath(); z.poligono.forEach(([x, y], k) => k ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y))); ctx.closePath();
+    const col = z.nivel === "ALTO" ? "#e5484d" : z.nivel === "MEDIO" ? "#f0883e" : "rgba(200,210,230,0.28)";
+    ctx.lineWidth = z.nivel === "BAJO" ? 1.2 : 2.4; ctx.strokeStyle = col;
+    ctx.setLineDash(z.nivel === "BAJO" ? [5, 4] : []); ctx.stroke(); ctx.setLineDash([]);
+    const xs = z.poligono.map(p => p[0]), ys = z.poligono.map(p => p[1]);
+    const cx = X((Math.min(...xs) + Math.max(...xs)) / 2), cy = Y(Math.max(...ys)) + 16;
+    ctx.font = "600 12px Segoe UI, system-ui"; ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(10,14,22,0.65)"; const tw = ctx.measureText(z.nombre).width;
+    redondeado(cx - tw / 2 - 6, cy - 12, tw + 12, 18, 5); ctx.fill();
+    ctx.fillStyle = "#e6ebf5"; ctx.fillText(z.nombre, cx, cy + 1);
+    ctx.font = "11px Segoe UI, system-ui"; ctx.fillStyle = col === "rgba(200,210,230,0.28)" ? "#9fb0c8" : col;
+    ctx.fillText(`${fmtDec(z.densidad, 1)} p/m²`, cx, cy + 16);
+  });
+
+  // receptores
+  if (capas.receptores) E.receptores.forEach(rc => {
+    const x = X(rc.x), y = Y(rc.y);
+    ctx.fillStyle = rc.online ? "#4fd1c5" : "#e5484d"; ctx.strokeStyle = "#0e131d"; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (E.mapa === "sala") { ctx.moveTo(x, y - 10); ctx.lineTo(x + 9, y + 7); ctx.lineTo(x - 9, y + 7); ctx.closePath(); }
+    else ctx.arc(x, y, 4.5, 0, 7);
+    ctx.fill(); ctx.stroke();
+    if (E.mapa === "sala") {
+      ctx.font = "700 12px Segoe UI, system-ui"; ctx.textAlign = "left"; ctx.fillStyle = "#4fd1c5";
+      const lx = Math.min(x + 12, X(W) - 50);
+      ctx.fillText(rc.id, lx, Math.max(y - 6, Y(Hh) + 14));
+    }
+  });
+
+  // pulseras
+  if (capas.pulseras) {
+    if (E.mapa === "sala") E.tags.forEach((t, i) => {
+      const x = X(t.x), y = Y(t.y);
+      ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fillStyle = COLORES_TAG[i % COLORES_TAG.length]; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = "#0e131d"; ctx.stroke();
+      ctx.font = "600 12px Segoe UI, system-ui"; ctx.textAlign = "left"; ctx.fillStyle = "#fff";
+      ctx.fillText(t.alias, x + 11, y - 9);
+    });
+    else { ctx.fillStyle = "rgba(255,255,255,0.55)"; E.tags.forEach(t => { ctx.fillRect(X(t.x) - 1.2, Y(t.y) - 1.2, 2.4, 2.4); }); }
+  }
+  $("#nota").textContent = E.mapa === "sala"
+    ? "Mapa de calor y flujo (información agregada) · triángulos = receptores"
+    : `Mapa de calor y flujo (información agregada) · se muestran ${Math.min(E.tags.length, 400)} pulseras de la muestra`;
+}
+
+function capaCalor(arr, nx, ny, color, X, Y, W, Hh, s) {
+  heat.width = nx; heat.height = ny;
+  const img = hctx.createImageData(nx, ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const v = arr[j * nx + i], c = color(v), o = ((ny - 1 - j) * nx + i) * 4;
+    img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = c[3] * 255;
+  }
+  hctx.putImageData(img, 0, 0);
+  ctx.save();
+  redondeado(X(0), Y(Hh), W * s, Hh * s, 10); ctx.clip();
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.filter = `blur(${Math.max(2, s * (E.celda) * 0.6)}px)`;
+  ctx.drawImage(heat, X(0), Y(Hh), W * s, Hh * s);
+  ctx.restore(); ctx.filter = "none";
+}
+
+function cuadricula(W, Hh, X, Y, s) {
+  ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.lineWidth = 1;
+  for (let x = 0; x <= W + 1e-6; x += 0.5) { ctx.beginPath(); ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x), Y(Hh)); ctx.stroke(); }
+  for (let y = 0; y <= Hh + 1e-6; y += 0.5) { ctx.beginPath(); ctx.moveTo(X(0), Y(y)); ctx.lineTo(X(W), Y(y)); ctx.stroke(); }
+  ctx.strokeStyle = "#5b6880"; ctx.lineWidth = 3; redondeado(X(0), Y(Hh), W * s, Hh * s, 10); ctx.stroke();
+  ctx.fillStyle = "#8f9bb3"; ctx.font = "11px Segoe UI, system-ui"; ctx.textAlign = "center";
+  for (let x = 0; x <= W + 1e-6; x += 1) ctx.fillText(`${x}`, X(x), Y(0) + 16);
+  ctx.textAlign = "right";
+  for (let y = 0; y <= Hh + 1e-6; y += 1) ctx.fillText(`${y}`, X(0) - 8, Y(y) + 4);
+  ctx.textAlign = "left"; ctx.fillText("m", X(W) + 6, Y(0) + 16);
+}
+
+function decorParque(X, Y, s) {
+  // senderos
+  ctx.strokeStyle = "#3a4458"; ctx.lineCap = "round"; ctx.lineWidth = Math.max(4, 5 * s);
+  const c = [[60, 4], [60, 28], [60, 58]], ramas = [[60, 28, 28, 39], [60, 28, 92, 39], [60, 20, 26, 15], [60, 50, 102, 66]];
+  ctx.beginPath(); c.forEach(([x, y], i) => i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y))); ctx.stroke();
+  ramas.forEach(([a, b, x, y]) => { ctx.beginPath(); ctx.moveTo(X(a), Y(b)); ctx.lineTo(X(x), Y(y)); ctx.stroke(); });
+  // borde y decoración
+  ctx.strokeStyle = "#3d4b45"; ctx.lineWidth = 3; redondeado(X(0), Y(80), 120 * s, 80 * s, 10); ctx.stroke();
+  (E.decoracion || []).forEach(d => {
+    ctx.beginPath(); d.poligono.forEach(([x, y], k) => k ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y))); ctx.closePath();
+    ctx.fillStyle = "#4a5268"; ctx.fill(); ctx.strokeStyle = "#6b7590"; ctx.lineWidth = 1.5; ctx.stroke();
+    const xs = d.poligono.map(p => p[0]), ys = d.poligono.map(p => p[1]);
+    ctx.fillStyle = "#d8deea"; ctx.font = "600 13px Segoe UI, system-ui"; ctx.textAlign = "center";
+    ctx.fillText(d.nombre, X((Math.min(...xs) + Math.max(...xs)) / 2), Y((Math.min(...ys) + Math.max(...ys)) / 2) + 5);
+  });
+  // acceso
+  ctx.fillStyle = "#f0883e"; ctx.beginPath(); ctx.moveTo(X(60), Y(0) - 12); ctx.lineTo(X(60) + 7, Y(0) - 2); ctx.lineTo(X(60) - 7, Y(0) - 2); ctx.fill();
+}
+
+function redondeado(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+// zoom y arrastre
+$("#zMas").onclick = () => { view.zoom = Math.min(6, view.zoom * 1.25); dibujarMapa(); };
+$("#zMenos").onclick = () => { view.zoom = Math.max(0.5, view.zoom / 1.25); dibujarMapa(); };
+$("#zReset").onclick = () => { view.zoom = 1; view.px = view.py = 0; dibujarMapa(); };
+cv.addEventListener("wheel", e => { e.preventDefault(); view.zoom = Math.max(0.5, Math.min(6, view.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1))); dibujarMapa(); }, {passive: false});
+let arr = null;
+cv.addEventListener("mousedown", e => { arr = [e.clientX - view.px, e.clientY - view.py]; cv.style.cursor = "grabbing"; });
+window.addEventListener("mouseup", () => { arr = null; cv.style.cursor = "grab"; });
+window.addEventListener("mousemove", e => { if (arr) { view.px = e.clientX - arr[0]; view.py = e.clientY - arr[1]; dibujarMapa(); } });
+
+// ---------------------------------------------------------------- históricos
+function pintarHistorico() {
+  if (!H) return;
+  linea($("#gAforo"), H.t, [{nombre: "Aforo", datos: H.aforo, color: "#4c8dff", relleno: true}], v => fmt(Math.round(v)));
+  const series = H.zonas.map((z, i) => ({nombre: z, datos: H.densidad[z], color: COLORES_ZONA[i % 8]}));
+  $("#legZonas").innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.nombre)}</span>`).join("");
+  const umbral = E ? Math.min(...E.zonas.map(z => z.umbral_alto)) : null;
+  linea($("#gZonas"), H.t, series, v => fmtDec(v, 1), umbral);
+  $("#tPerm").innerHTML = H.permanencia.map(p => `<tr><td>${esc(p.zona)}</td><td class="num">${p.prom_s ? fmtDur(p.prom_s) : "—"}</td><td class="num">${fmt(p.entradas_10min)}</td></tr>`).join("");
+  $("#tFlujos").innerHTML = H.flujos.length ? H.flujos.map(f => `<tr><td>${esc(f.de)}</td><td>${esc(f.a)}</td><td class="num">${fmt(f.personas)}</td></tr>`).join("")
+    : `<tr><td colspan="3" class="vacio">Aún no hay movimientos entre zonas.</td></tr>`;
+}
+
+function linea(canvas, t, series, fmtY, umbral) {
+  const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+  const c = canvas.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, r.width, r.height);
+  const L = 54, R = 16, T = 12, B = 28, w = r.width - L - R, h = r.height - T - B;
+  if (!t.length) { c.fillStyle = "#8f9bb3"; c.fillText("Juntando datos…", L, T + 20); return; }
+  let mx = Math.max(1e-6, ...series.flatMap(s => s.datos)); if (umbral) mx = Math.max(mx, umbral * 1.1); mx *= 1.08;
+  const X = i => L + (t.length < 2 ? 0 : i / (t.length - 1) * w), Y = v => T + h - v / mx * h;
+  c.strokeStyle = "#232c3f"; c.fillStyle = "#8f9bb3"; c.font = "11px Segoe UI, system-ui"; c.lineWidth = 1;
+  for (let k = 0; k <= 4; k++) { const v = mx * k / 4, y = Y(v); c.beginPath(); c.moveTo(L, y); c.lineTo(L + w, y); c.stroke(); c.textAlign = "right"; c.fillText(fmtY(v), L - 6, y + 4); }
+  c.textAlign = "center";
+  for (let k = 0; k <= 4; k++) { const i = Math.round((t.length - 1) * k / 4); c.textAlign = k === 0 ? "left" : k === 4 ? "right" : "center"; c.fillText(hora(t[i]), X(i), T + h + 18); }
+  if (umbral) { c.strokeStyle = "#e5484d"; c.setLineDash([6, 4]); c.beginPath(); c.moveTo(L, Y(umbral)); c.lineTo(L + w, Y(umbral)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = "#e5484d"; c.textAlign = "left"; c.fillText("umbral ALTO", L + 6, Y(umbral) - 5); }
+  series.forEach(s => {
+    c.beginPath(); s.datos.forEach((v, i) => i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v)));
+    c.strokeStyle = s.color; c.lineWidth = 2; c.stroke();
+    if (s.relleno) { c.lineTo(X(s.datos.length - 1), Y(0)); c.lineTo(X(0), Y(0)); c.closePath(); const g = c.createLinearGradient(0, T, 0, T + h); g.addColorStop(0, "rgba(76,141,255,.3)"); g.addColorStop(1, "rgba(76,141,255,0)"); c.fillStyle = g; c.fill(); }
+  });
+}
+window.addEventListener("resize", () => { if (vista === "historicos") pintarHistorico(); });
+</script>
+</body>
+</html>

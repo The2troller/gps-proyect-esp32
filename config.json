@@ -1,47 +1,62 @@
 {
-  "objetivo": [
-    "Xiaomi 15T Pro",
-    "S24 de Cristobal",
-    "Redmi Note 13 Pro 5G"
-  ],
   "puerto_udp": 4210,
-  "sala": [
-    6.0,
-    6.5
-  ],
-  "celda_m": 0.5,
-  "ventana_s": 2.0,
-  "min_muestras": 1,
-  "intervalo_ms": 200,
-  "decay": 0.97,
-  "suavizado": 0.8,
-  "anclas": {
-    "A": {
-      "pos": [
-        0.0,
-        6.5
-      ],
-      "A": -59.0,
-      "n": 2.5,
-      "peso": 1.0
-    },
-    "B": {
-      "pos": [
-        4.5,
-        0.0
-      ],
-      "A": -59.0,
-      "n": 2.5,
-      "peso": 1.0
-    },
-    "LAPTOP": {
-      "pos": [
-        6.0,
-        5.5
-      ],
-      "A": -48.0,
-      "n": 2.5,
-      "peso": 0.5
+  "puerto_web": 8000,
+  "deteccion": {
+    "company_id": 65535,
+    "prefijo": "FX",
+    "nombres": ["Xiaomi 15T Pro", "S24 de Cristobal", "Redmi Note 13 Pro 5G"],
+    "alias": {
+      "FX01": "Pulsera 1",
+      "FX02": "Pulsera 2",
+      "FX03": "Pulsera 3",
+      "Xiaomi 15T Pro": "Xiaomi",
+      "S24 de Cristobal": "S24",
+      "Redmi Note 13 Pro 5G": "Redmi"
     }
+  },
+  "sala": {
+    "nombre": "Sala de prueba",
+    "dimensiones": [6.0, 6.5],
+    "celda_m": 0.25,
+    "sigma_m": 0.6,
+    "ventana_s": 2.0,
+    "min_anclas": 3,
+    "suavizado": 0.8,
+    "decay": 0.985,
+    "olvido_s": 5.0,
+    "factor_expansion": 10,
+    "anclas": {
+      "A": { "pos": [0.0, 6.5], "A": -59.0, "n": 2.5, "peso": 1.0 },
+      "B": { "pos": [4.5, 0.0], "A": -59.0, "n": 2.5, "peso": 1.0 },
+      "LAPTOP": { "pos": [6.0, 5.5], "A": -48.0, "n": 2.5, "peso": 0.5 }
+    },
+    "zonas": [
+      { "nombre": "Zona A", "poligono": [[0, 0], [3, 0], [3, 3.25], [0, 3.25]], "umbral_medio": 1.5, "umbral_alto": 3.0 },
+      { "nombre": "Zona B", "poligono": [[3, 0], [6, 0], [6, 3.25], [3, 3.25]], "umbral_medio": 1.5, "umbral_alto": 3.0 },
+      { "nombre": "Zona C", "poligono": [[0, 3.25], [6, 3.25], [6, 6.5], [0, 6.5]], "umbral_medio": 1.5, "umbral_alto": 3.0 }
+    ]
+  },
+  "parque": {
+    "nombre": "Parque (simulación)",
+    "dimensiones": [120, 80],
+    "celda_m": 2.0,
+    "sigma_m": 3.0,
+    "decay": 0.995,
+    "olvido_s": 5.0,
+    "pulseras": 1200,
+    "factor_expansion": 10,
+    "velocidad_sim": 3.0,
+    "zonas": [
+      { "nombre": "Acceso Principal", "poligono": [[50, 0], [70, 0], [70, 11], [50, 11]], "umbral_medio": 2.0, "umbral_alto": 4.0 },
+      { "nombre": "Zona de tránsito", "poligono": [[52, 11], [68, 11], [68, 54], [52, 54]], "umbral_medio": 2.0, "umbral_alto": 4.0 },
+      { "nombre": "Frente de escenario", "poligono": [[36, 55], [84, 55], [84, 70], [36, 70]], "umbral_medio": 2.5, "umbral_alto": 4.5 },
+      { "nombre": "Zona de Stands", "poligono": [[6, 30], [50, 30], [50, 48], [6, 48]], "umbral_medio": 2.0, "umbral_alto": 4.0 },
+      { "nombre": "Patio de comidas", "poligono": [[70, 30], [114, 30], [114, 48], [70, 48]], "umbral_medio": 2.0, "umbral_alto": 4.0 },
+      { "nombre": "Atracciones Norte", "poligono": [[88, 55], [116, 55], [116, 77], [88, 77]], "umbral_medio": 2.0, "umbral_alto": 4.0 },
+      { "nombre": "Atracciones Sur", "poligono": [[6, 5], [46, 5], [46, 25], [6, 25]], "umbral_medio": 2.0, "umbral_alto": 4.0 }
+    ],
+    "decoracion": [
+      { "tipo": "escenario", "nombre": "Escenario", "poligono": [[42, 71], [78, 71], [78, 79], [42, 79]] }
+    ]
   }
 }
