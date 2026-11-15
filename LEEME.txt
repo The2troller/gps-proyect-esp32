@@ -10,7 +10,7 @@ QUE HAY AQUI
   calibrar.py      Calibra A y n de cada ancla
   config.json      Sala, anclas, zonas, umbrales y deteccion de pulseras
   web/index.html   La interfaz
-  firmware/        Proyecto PlatformIO del firmware de los ESP32-S3 (anclas A y B)
+  firmware/        Proyecto PlatformIO de los ESP32-S3: torres (ancla.cpp) y pulseras (pulsera.cpp)
 
 INSTALAR (una vez)
   pip install -r requirements.txt
@@ -33,7 +33,7 @@ DETECCION SIN DEPENDER DEL NOMBRE (lo nuevo)
 
 FIRMWARE ESP32 (carpeta firmware/, PlatformIO)
   - Abrir la carpeta firmware/ en VS Code con la extension PlatformIO.
-  - Antes de subir: revisar WIFI_SSID y WIFI_PASS en src/main.cpp.
+  - TORRES (src/ancla.cpp): antes de subir, revisar WIFI_SSID y WIFI_PASS.
   - Placa A:  pio run -e anclaA -t upload      Placa B:  pio run -e anclaB -t upload
     (o en la barra de PlatformIO elegir el entorno anclaA / anclaB y apretar Upload).
     El ID de cada ancla ya viene en platformio.ini, no hay que editar el codigo entre placas.
@@ -41,7 +41,14 @@ FIRMWARE ESP32 (carpeta firmware/, PlatformIO)
   - Placa configurada: esp32-s3-devkitc-1, flash 4 MB, particion huge_app.
     Si el monitor serie no muestra nada y la placa tiene chip USB-serie (CH340/CP2102),
     borrar las lineas ARDUINO_USB_MODE y ARDUINO_USB_CDC_ON_BOOT de platformio.ini.
-  - Reconoce la firma FX y, de respaldo, los nombres. Envia un latido cada 5 s.
+  - Las torres reconocen la firma FX y, de respaldo, los nombres. Envian un latido cada 5 s.
+  - PULSERAS (src/pulsera.cpp): un ESP32 que solo anuncia por BLE la firma FX, sin WiFi.
+      pio run -e pulsera1 -t upload   (FX01)
+      pio run -e pulsera2 -t upload   (FX02)
+      pio run -e pulsera3 -t upload   (FX03)
+    Para mas pulseras se copia un bloque [env:pulseraN] en platformio.ini con otro numero.
+    El LED parpadea cada 2 s cuando la pulsera esta encendida.
+    Celulares con nRF Connect y pulseras ESP32 se pueden usar a la vez (con numeros distintos).
 
 QUE MUESTRA EL PANEL
   Monitoreo de Flujo  Mapa de calor (densidad actual o permanencia acumulada), zonas con nivel

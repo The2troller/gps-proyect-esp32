@@ -1,5 +1,5 @@
 /*
- * FLUXA - firmware de ancla (receptor BLE -> UDP) para ESP32-S3, proyecto PlatformIO.
+ * FLUXA - firmware de TORRE / ancla (receptor BLE -> UDP) para ESP32-S3, proyecto PlatformIO.
  *
  *  - Detecta pulseras FLUXA por Manufacturer Data (Company ID 0xFFFF + "FX01", "FX02"...)
  *    y, de respaldo, por los nombres de OBJETIVOS.
@@ -7,6 +7,7 @@
  *  - Envia un latido cada 5 s: {"a":"A","hb":1,...}
  *
  *  Subir:  pio run -e anclaA -t upload   /   pio run -e anclaB -t upload
+ *  (este archivo es el de las TORRES; la pulsera esta en pulsera.cpp)
  */
 #include <Arduino.h>
 #include <WiFi.h>
