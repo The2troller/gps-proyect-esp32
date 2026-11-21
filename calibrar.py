@@ -3,8 +3,9 @@ calibrar.py: ajusta RSSI = A - 10 n log10(d) para UNA ancla.
 
 Uso:  python calibrar.py A        (luego B y LAPTOP, una vez cada una)
 
-Para cada distancia pones el celular (anunciando PULSERA1) a esa distancia de la ancla,
-sin moverlo, y presionas Enter. El script toma ~100 muestras y usa la mediana.
+Para cada distancia pones UNA sola pulsera (p. ej. FX01) a esa distancia de la ancla,
+sin moverla, y presionas Enter. El script toma ~100 muestras y usa la mediana.
+Importante: deja encendida solo una pulsera mientras calibras.
 """
 import json
 import sys
@@ -24,12 +25,13 @@ def main():
         sys.exit("Uso: python calibrar.py <ancla>   (A, B o LAPTOP)")
     ancla = sys.argv[1]
 
-    with open("config.json") as fh:
+    with open("config.json", encoding="utf-8") as fh:
         cfg = json.load(fh)
-    if ancla not in cfg["anclas"]:
-        sys.exit(f"Ancla '{ancla}' no existe en config.json: {list(cfg['anclas'])}")
+    anclas = cfg["sala"]["anclas"]
+    if ancla not in anclas:
+        sys.exit(f"Ancla '{ancla}' no existe en config.json: {list(anclas)}")
 
-    f = Fuentes(cfg["objetivo"], cfg["puerto_udp"])
+    f = Fuentes(cfg["puerto_udp"], cfg.get("deteccion", {}))
     f.iniciar()
     time.sleep(2)
 
@@ -65,10 +67,10 @@ def main():
         print(f"  {real:4.1f} m -> {est:4.2f} m")
 
     if input("\n¿Guardar A y n en config.json? [s/N] ").strip().lower() == "s":
-        cfg["anclas"][ancla]["A"] = round(float(A), 1)
-        cfg["anclas"][ancla]["n"] = round(float(n), 2)
-        with open("config.json", "w") as fh:
-            json.dump(cfg, fh, indent=2)
+        anclas[ancla]["A"] = round(float(A), 1)
+        anclas[ancla]["n"] = round(float(n), 2)
+        with open("config.json", "w", encoding="utf-8") as fh:
+            json.dump(cfg, fh, indent=2, ensure_ascii=False)
         print("Guardado.")
 
 
